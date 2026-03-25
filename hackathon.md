@@ -74,7 +74,7 @@ Single operator commands:
 
 Required env var for devnet operation:
 
-- `DEVNET_KEYPAIR_PATH`
+- No required wallet key env var for local operation; authority key auto-generates when absent.
 
 ## Why This Is Revolutionary Relative To Typical Vault Bots
 

@@ -18,7 +18,16 @@ type ApiStatus = {
     totalDepositsSol: number;
     totalClaimsSol: number;
     claimableByWallet: Record<string, number>;
-    depositLedger: Array<{ wallet: string; signature: string; amountSol: number; timestamp: string }>;
+    userDepositAddressByWallet: Record<string, string>;
+    depositLedger: Array<{
+      wallet: string;
+      signature: string;
+      depositAddress: string;
+      sweepSignature: string | null;
+      sweptAmountSol: number;
+      amountSol: number;
+      timestamp: string;
+    }>;
     claimLedger: Array<{ wallet: string; signature: string; amountSol: number; timestamp: string }>;
   };
 };
@@ -49,6 +58,7 @@ export default function App(): JSX.Element {
   const wallet = useWallet();
   const [status, setStatus] = useState<ApiStatus | null>(null);
   const [depositAmount, setDepositAmount] = useState("0.1");
+  const [depositAddress, setDepositAddress] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string>("");
 
@@ -71,8 +81,28 @@ export default function App(): JSX.Element {
     ? status.state.claimableByWallet[wallet.publicKey.toBase58()] ?? 0
     : 0;
 
+  useEffect(() => {
+    if (!wallet.publicKey || !status) {
+      setDepositAddress("");
+      return;
+    }
+
+    const walletAddress = wallet.publicKey.toBase58();
+    const existing = status.state.userDepositAddressByWallet[walletAddress];
+    if (existing) {
+      setDepositAddress(existing);
+      return;
+    }
+
+    fetchJson<{ depositAddress: string }>(`${API_BASE}/deposits/address/${walletAddress}`)
+      .then((payload) => {
+        setDepositAddress(payload.depositAddress);
+      })
+      .catch(() => undefined);
+  }, [wallet.publicKey, status]);
+
   async function handleDeposit(): Promise<void> {
-    if (!wallet.publicKey || !wallet.sendTransaction || !status) {
+    if (!wallet.publicKey || !wallet.sendTransaction || !status || !depositAddress) {
       setMessage("Connect wallet first");
       return;
     }
@@ -89,7 +119,7 @@ export default function App(): JSX.Element {
       const tx = new Transaction().add(
         SystemProgram.transfer({
           fromPubkey: wallet.publicKey,
-          toPubkey: new PublicKey(status.botWallet),
+          toPubkey: new PublicKey(depositAddress),
           lamports: Math.round(amount * LAMPORTS_PER_SOL),
         }),
       );
@@ -222,7 +252,10 @@ export default function App(): JSX.Element {
       <div className="grid grid-2" style={{ marginTop: "1rem" }}>
         <Card>
           <CardTitle>Deposit SOL To Bot</CardTitle>
-          <CardDescription>Send SOL from connected wallet to bot account and register funding ledger.</CardDescription>
+          <CardDescription>Send SOL from connected wallet to your generated smart deposit address.</CardDescription>
+          <div className="tag mono" style={{ marginTop: "0.6rem" }}>
+            Deposit Address {depositAddress ? short(depositAddress) : "--"}
+          </div>
           <div style={{ marginTop: "0.8rem" }}>
             <Label htmlFor="deposit">Amount (SOL)</Label>
             <Input
@@ -233,7 +266,7 @@ export default function App(): JSX.Element {
               disabled={busy}
             />
           </div>
-          <Button className="w-full" style={{ marginTop: "0.8rem" }} onClick={handleDeposit} disabled={busy}>
+          <Button className="w-full" style={{ marginTop: "0.8rem" }} onClick={handleDeposit} disabled={busy || !depositAddress}>
             Deposit To Bot Wallet
           </Button>
         </Card>
@@ -270,6 +303,7 @@ export default function App(): JSX.Element {
               <thead>
                 <tr>
                   <th>Wallet</th>
+                  <th>Deposit</th>
                   <th>Amount</th>
                   <th>Signature</th>
                 </tr>
@@ -278,6 +312,7 @@ export default function App(): JSX.Element {
                 {(status?.state.depositLedger ?? []).slice(0, 8).map((row) => (
                   <tr key={row.signature}>
                     <td className="mono">{short(row.wallet)}</td>
+                    <td className="mono">{short(row.depositAddress)}</td>
                     <td>{formatNumber(row.amountSol, 4)} SOL</td>
                     <td className="mono">{short(row.signature)}</td>
                   </tr>

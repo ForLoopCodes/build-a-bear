@@ -10,21 +10,32 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const botKeypairPath = process.env.BOT_KEYPAIR_PATH ?? process.env.DEVNET_KEYPAIR_PATH;
-if (!botKeypairPath) {
-  throw new Error("BOT_KEYPAIR_PATH or DEVNET_KEYPAIR_PATH is required");
-}
-
-const walletService = new WalletService(botKeypairPath, process.env.RPC_URL);
+const authorityKeypairPath = process.env.BOT_AUTHORITY_KEYPAIR_PATH ?? process.env.BOT_KEYPAIR_PATH;
+const walletService = new WalletService(authorityKeypairPath, process.env.RPC_URL);
 
 app.get("/api/status", async (_, response) => {
   const state = loadState();
   const botBalanceSol = await walletService.getBotBalanceSol();
   response.json({
-    botWallet: walletService.getBotPublicKey(),
+    botWallet: walletService.getBotAuthorityPublicKey(),
     botBalanceSol,
     state,
   });
+});
+
+app.get("/api/deposits/address/:wallet", (request, response) => {
+  const { wallet } = request.params;
+  if (!wallet) {
+    response.status(400).json({ error: "wallet is required" });
+    return;
+  }
+
+  const depositAddress = walletService.getOrCreateUserDepositAddress(wallet);
+  const state = loadState();
+  state.userDepositAddressByWallet[wallet] = depositAddress;
+  saveState(state);
+
+  response.json({ wallet, depositAddress });
 });
 
 app.post("/api/deposits/record", async (request, response) => {
@@ -40,14 +51,23 @@ app.post("/api/deposits/record", async (request, response) => {
   }
 
   const state = loadState();
+  const depositAddress = walletService.getOrCreateUserDepositAddress(wallet);
+  const sweep = await walletService.sweepUserDeposit(wallet);
+
+  const creditedAmount = sweep.amountSol > 0 ? sweep.amountSol : amountSol;
+
   state.depositLedger.unshift({
     wallet,
     signature,
-    amountSol,
+    depositAddress,
+    sweepSignature: sweep.signature,
+    sweptAmountSol: sweep.amountSol,
+    amountSol: creditedAmount,
     timestamp: new Date().toISOString(),
   });
-  state.totalDepositsSol += amountSol;
-  state.claimableByWallet[wallet] = (state.claimableByWallet[wallet] ?? 0) + amountSol;
+  state.totalDepositsSol += creditedAmount;
+  state.claimableByWallet[wallet] = (state.claimableByWallet[wallet] ?? 0) + creditedAmount;
+  state.userDepositAddressByWallet[wallet] = depositAddress;
   saveState(state);
   response.json({ ok: true, state });
 });

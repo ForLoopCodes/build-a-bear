@@ -1,7 +1,7 @@
 import { StrategyState, allocationTargetSchema } from "@build-a-bear/core";
-import { appendFileSync, writeFileSync } from "fs";
+import { appendFileSync, existsSync, mkdirSync, writeFileSync } from "fs";
 import path from "path";
-import { clusterApiUrl } from "@solana/web3.js";
+import { Keypair, clusterApiUrl } from "@solana/web3.js";
 import { buildAllocations } from "../allocation";
 import { loadBotConfig } from "../config";
 import { simulateExecution } from "../execution";
@@ -108,12 +108,17 @@ export async function runDevnetPaperTradingCycle(options: RunOptions): Promise<v
 }
 
 export async function runDefaultDevnetPaperTradingCycle(): Promise<void> {
-  const keypairPath = process.env.DEVNET_KEYPAIR_PATH;
-  if (!keypairPath) {
-    throw new Error("DEVNET_KEYPAIR_PATH is required");
+  const root = path.resolve(process.cwd(), "..", "..");
+  const keypairPath = process.env.BOT_AUTHORITY_KEYPAIR_PATH ??
+    process.env.BOT_KEYPAIR_PATH ??
+    process.env.DEVNET_KEYPAIR_PATH ??
+    path.join(root, "ml", "output", "bot_authority_keypair.json");
+
+  if (!existsSync(keypairPath)) {
+    mkdirSync(path.dirname(keypairPath), { recursive: true });
+    writeFileSync(keypairPath, JSON.stringify(Array.from(Keypair.generate().secretKey), null, 2), "utf-8");
   }
 
-  const root = path.resolve(process.cwd(), "..", "..");
   await runDevnetPaperTradingCycle({
     keypairPath,
     mlPayloadPath: process.env.ML_PAYLOAD_PATH ?? path.join(root, "ml", "output", "inference_payload.json"),

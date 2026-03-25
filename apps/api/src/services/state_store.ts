@@ -12,6 +12,7 @@ const EMPTY_STATE: BotState = {
   totalDepositsSol: 0,
   totalClaimsSol: 0,
   claimableByWallet: {},
+  userDepositAddressByWallet: {},
   depositLedger: [],
   claimLedger: [],
 };

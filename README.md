@@ -66,7 +66,8 @@ Frontend features:
 
 ## Environment For API and Bot
 
-- `BOT_KEYPAIR_PATH` or `DEVNET_KEYPAIR_PATH` is required for API payout and devnet paper bot.
+- `BOT_AUTHORITY_KEYPAIR_PATH` or `BOT_KEYPAIR_PATH` is optional for explicit authority key selection.
+- If no authority key path is provided, bot authority is auto-generated at `ml/output/bot_authority_keypair.json`.
 - `RPC_URL` optional, defaults to devnet where applicable.
 - `API_PORT` optional, default `8787`.
 
@@ -78,7 +79,8 @@ Frontend features:
 
 ## Required Environment Variables
 
-- `DEVNET_KEYPAIR_PATH`: absolute or repo-relative path to devnet keypair json.
+- No required wallet key env var for local runs; authority key is generated automatically when missing.
+- `BOT_AUTHORITY_KEYPAIR_PATH`: optional absolute or repo-relative path for persisted bot authority.
 - `RPC_URL`: optional, defaults to devnet cluster in paper-runner.
 - `ML_PAYLOAD_PATH`: optional, defaults to `ml/output/inference_payload.json`.
 - `PAPER_OUTPUT_PATH`: optional, defaults to `ml/output/devnet_paper_run.json`.

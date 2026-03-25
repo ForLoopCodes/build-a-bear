@@ -6,9 +6,13 @@ export type BotState = {
   totalDepositsSol: number;
   totalClaimsSol: number;
   claimableByWallet: Record<string, number>;
+  userDepositAddressByWallet: Record<string, string>;
   depositLedger: Array<{
     wallet: string;
     signature: string;
+    depositAddress: string;
+    sweepSignature: string | null;
+    sweptAmountSol: number;
     amountSol: number;
     timestamp: string;
   }>;
