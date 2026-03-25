@@ -1,257 +1,341 @@
-This document defines a stronger hybrid plan for Drift side-track success.
-It merges edge, risk, implementation, and submission proof into one blueprint.
+This document defines an ML-first Drift vault plan for the hackathon.
+It maps papers to models, data pipelines, training, and bot execution.
 
-# Drift Adaptive Funding Carry Vault - Hybrid Winner Plan
+# Drift Adaptive Funding Vault - ML and RL Build Plan
 
-## Mission
+## Goal
 
-Launch a production-grade Ranger Earn vault that uses Drift as the core engine, stays USDC-denominated, targets sustainable net APY above 10 percent, and survives a rolling 3-month lock cycle with strict downside controls.
+Build a production-ready Ranger vault manager bot that uses Drift as the core venue, stays USDC-denominated, targets net APY above 10 percent, and enforces strict drawdown and liquidation safety over a rolling 3-month lock profile.
 
-## Why This Hybrid Is Stronger
+## Hackathon Constraints and Design Rules
 
-- Keeps your friend's strongest parts: clear alpha thesis, explicit cadence, concrete risk triggers
-- Keeps the strongest technical parts: Ranger and Drift adaptor architecture, ops loops, and on-chain verifiability
-- Adds a judge-facing format: parameter table, test gates, live monitoring KPIs, and submission evidence
-
-## Primary Strategy Thesis
-
-Use a risk-first carry stack with three capital states and deterministic switching rules:
-
-1. Safety State: park idle capital in Drift USDC lend for baseline yield
-2. Carry State: run delta-neutral basis and funding capture on top Drift markets
-3. Spread State: optional cross-venue hedged overlay only when net spread is materially better than Drift-only carry
-
-The strategy only deploys risk when projected net APY clears strict post-cost thresholds.
-
-## Rule Compliance Mapping
-
-| Requirement | Hybrid Plan Mapping |
-| --- | --- |
-| Minimum APY: 10% | Entry gate enforces net projected APY threshold above target band |
-| Base Asset: USDC | Vault accounting, collateral logic, and reporting in USDC |
-| Tenor: 3-month lock rolling | 90-day rolling review with monthly risk recalibration |
-| Drift as core component | Drift perps, funding, and margin health used in every active state |
-| Disallowed yield sources | No LP vaults, no junior tranches, no circular stables, no leverage looping design |
-
-## Research Evidence Base
-
-### Core Papers
-
-- The Recurrent Reinforcement Learning Crypto Agent: https://arxiv.org/abs/2201.04699
-- Optimizing Portfolio with Two-Sided Transactions and Lending: https://arxiv.org/abs/2408.05382
-- Deep Learning Statistical Arbitrage: https://arxiv.org/abs/2106.04028
-- Hedging and Pricing Structured Products Featuring Multiple Underlying Assets: https://arxiv.org/abs/2411.01121
-
-### Supporting Market Predictability Papers
-
-- Practical Forecasting of Cryptocoins Timeseries using Correlation Patterns: https://arxiv.org/abs/2409.03674
-- Anticipating cryptocurrency prices using machine learning: https://arxiv.org/abs/1805.08550
-- Ascertaining price formation in cryptocurrency markets with DeepLearning: https://arxiv.org/abs/2003.00803
-
-### Evidence Used in Design Choices
-
-- Funding profit can dominate derivative returns, supporting funding-capture as primary alpha
-- 4-hour rebalance cadence and 48-hour lookback are practical for noisy crypto regimes
-- Risk-aware and downside-penalized objectives outperform pure return chasing in volatile periods
-
-## Protocol and Competition Sources
-
-- Hackathon page: https://ranger.finance/build-a-bear-hackathon
-- Ranger Earn app: https://www.app.ranger.finance/earn
-- Ranger docs index: https://docs.ranger.finance/llms.txt
-- Drift protocol docs: https://docs.drift.trade/protocol
-- Drift funding rates: https://docs.drift.trade/protocol/trading/perpetuals-trading/funding-rates
-- Drift account health: https://docs.drift.trade/protocol/trading/margin/account-health
-- Drift liquidations: https://docs.drift.trade/protocol/trading/liquidations
-- Drift borrow and lend: https://docs.drift.trade/protocol/borrow-lend
-- Ranger strategy setup: https://docs.ranger.finance/vault-owners/strategies/setup-guide
-- Ranger bots and scripts: https://docs.ranger.finance/vault-owners/operations/bots-and-scripts
-- Ranger deployed programs: https://docs.ranger.finance/security/deployed-programs
-- Ranger audits: https://docs.ranger.finance/security/audits
-- Cobo API docs: https://www.cobo.com/developers/v2/developer-tools/cobo-cli/api-documentation
+- Base asset must be USDC.
+- APY target must be at least 10 percent net.
+- Tenor is 3-month rolling.
+- Avoid disallowed sources: DEX LP vaults, junior tranches, circular yield stables, and high-leverage looping.
+- Strategy must be deployable with clear risk controls and on-chain evidence.
 
 ## Strategy Architecture
 
-### Market Universe
+### Three Strategy States
 
-- Tier 1: BTC-PERP, ETH-PERP, SOL-PERP
-- Tier 2 only if liquidity and slippage metrics pass hard filters
+1. Safety State: keep capital in Drift USDC lend and minimal risk.
+2. Carry State: run delta-neutral funding and basis capture on Drift core markets.
+3. Spread State: optional cross-venue hedge overlay only when net post-cost spread is meaningfully higher.
 
-### Alpha Components
+### What ML Controls
 
-- Funding capture
-- Basis convergence
-- Baseline lending yield on idle USDC
-- Optional cross-venue spread capture when execution risk is justified
+- State selection and transition timing.
+- Market ranking and per-market allocation.
+- Position sizing under risk limits.
+- Exit urgency when edge decay or risk rises.
 
-### Net APY Model
+### Hard Risk Authority
 
-`net_apy = lend_apy + funding_apr + basis_apr - taker_fees_apr - maker_fees_apr - slippage_apr - borrow_apr - risk_haircut_apr`
+Risk limits are deterministic and override all models.
 
-No position is opened unless net_apy is above entry threshold with safety margin.
+- Health soft de-risk below 55.
+- Health hard flatten below 45.
+- Daily soft drawdown at -5 percent.
+- Daily hard drawdown at -8 percent.
+- Rolling drawdown cap at -12 percent.
 
-### Regime Router
+## How The Seven Papers Are Used
 
-- If net_apy is high and stable, use Carry State
-- If spreads are exceptional and execution quality is strong, allow Spread State
-- If edge weakens or risk rises, revert to Safety State
+| Paper | Practical Use In This Build |
+| --- | --- |
+| 2201.04699 The Recurrent Reinforcement Learning Crypto Agent | Justifies funding-profit alpha and cost-aware reward design, including funding as explicit reward component |
+| 2408.05382 Optimizing Portfolio with Two-Sided Transactions and Lending | Provides 4-hour rebalance and 48-hour lookback defaults, plus downside-penalized PnL reward design |
+| 2106.04028 Deep Learning Statistical Arbitrage | Provides residual-based signal decomposition and constrained policy architecture |
+| 2411.01121 Hedging and Pricing Structured Products | Supports tail-risk-aware objective and stronger downside penalties in policy learning |
+| 2409.03674 Practical Forecasting of Cryptocoins Timeseries | Supports cross-asset correlation features and lead-lag predictors for regime scoring |
+| 1805.08550 Anticipating Cryptocurrency Prices Using Machine Learning | Supports broad crypto inefficiency premise and simple robust model baselines |
+| 2003.00803 Ascertaining Price Formation In Cryptocurrency Markets | Supports microstructure features and short-horizon direction prediction |
 
-## Parameter Sheet (Judge Friendly)
+## ML System Blueprint
 
-| Parameter | Initial Value | Purpose |
-| --- | --- | --- |
-| Signal lookback | 48 hours | Reduce noise and avoid stale long-history bias |
-| Rebalance cadence | 4 hours | Aligns with evidence and controls turnover |
-| Funding check | Hourly | Funding updates are hourly on Drift |
-| Min entry net APY | 12% | Keeps buffer above 10% prize floor |
-| Exit APY threshold | 8% | Hysteresis to avoid churn |
-| Per-market cap | 25% TVL | Concentration control |
-| Gross exposure cap | 2.2x TVL | Avoid leverage creep and tail fragility |
-| Health warning band | < 60 | Early risk reduction |
-| Health soft de-risk | < 55 | Partial unwind and tighter limits |
-| Health hard de-risk | < 45 | Full flatten to safety state |
-| Daily soft drawdown | -5% | Stop adding risk and reduce positions |
-| Daily hard drawdown | -8% | Force flatten and cooldown |
-| Rolling max drawdown cap | -12% | Vault-level survival guardrail |
-| Oracle divergence cap | 40 bps | Protect against bad marks and dislocations |
-| Max slippage per rebalance | 15 bps Tier 1 | Keep execution quality predictable |
+## 1) Data Layer
 
-## Position Lifecycle Rules
+### Required Data Sources
 
-### Entry
+- Drift market data: mark price, oracle price, funding rates, open interest, spreads, volume.
+- Drift borrow-lend data: lend APY, borrow APY, utilization.
+- Drift account risk data: account health, margin usage, liquidation distance.
+- Ranger vault data: TVL, deposits, withdrawals, strategy allocations, fee events.
+- Optional CEX data if Spread State is enabled.
 
-- Edge clears entry threshold after all cost haircuts
-- Liquidity depth supports target size within slippage cap
-- Account health remains above warning band after stress add-ons
+### Data Ingestion Plan
 
-### Hold
+- Pull hourly and sub-hourly snapshots for all target markets.
+- Backfill at least 12 to 24 months where possible.
+- Store immutable raw files and normalized feature tables.
+- Build idempotent incremental updates.
 
-- Re-price expected edge every hour
-- Rebalance every 4 hours or on threshold breach
-- Maintain near-delta-neutral profile in carry states
+### Dataset Schema
 
-### Exit
+- `timestamp`
+- `market`
+- `funding_rate_hourly`
+- `funding_apr_annualized`
+- `basis_bps`
+- `mark_oracle_divergence_bps`
+- `bid_ask_spread_bps`
+- `volume_1h`
+- `open_interest`
+- `volatility_1h`
+- `volatility_24h`
+- `lend_apy`
+- `borrow_apy`
+- `utilization`
+- `health_proxy`
+- `execution_cost_estimate_bps`
+- `realized_next_4h_pnl`
+- `realized_next_4h_net_apy`
 
-- Funding flips adverse for two consecutive checks
-- Net projected APY drops below exit threshold
-- Health, drawdown, or oracle guardrails breach
+## 2) Feature Layer
 
-### Circuit Breaker
+### Feature Groups
 
-- Hard drawdown, telemetry failure, or severe market dislocation triggers full flatten
-- Capital parks in USDC lending until cooldown conditions pass
+- Funding features: current funding, moving averages, funding momentum, funding sign persistence.
+- Basis features: perp-spot basis level, z-score, basis trend.
+- Microstructure features: spread, orderbook imbalance proxy, volume shocks.
+- Risk features: realized volatility, jump indicators, oracle divergence, health headroom.
+- Carry features: lend APY, borrow APY, utilization slope.
+- Regime features: clustering states from volatility, correlation, and spread stability.
 
-## Risk Framework
+### Feature Horizon Design
 
-### Hard Limits
+- Fast horizon: 1h, 2h, 4h.
+- Context horizon: 24h, 48h.
+- Structural horizon: 7d rolling for stability checks.
 
-- USDC base asset only for vault accounting
-- No banned yield primitives under competition rules
-- No strategy mode that depends on high-leverage looping
+## 3) Modeling Layer
 
-### Drift-Specific Protection
+### Model A: Edge Forecaster (Supervised)
 
-- Continuous health monitor loop
-- Liquidation-distance estimator and stress replay before adding risk
-- Funding-window order aggressiveness throttling
+Target: next-4h net edge after costs.
 
-### Operational Protection
+- Inputs: full feature set.
+- Outputs: expected net APY score and confidence interval.
+- Baselines: linear, gradient boosting, light neural model.
+- Use case: trade gate and market ranking.
 
-- Dual-RPC failover
-- Stale-data detector
-- Safe-mode fallback on connector instability
+### Model B: Regime Classifier
 
-## Technical Implementation Blueprint
+Target: classify environment into stable carry, unstable carry, or risk-off.
 
-### Core On-Chain Components
+- Inputs: volatility, spread behavior, funding stability, divergence metrics.
+- Output: regime label with confidence.
+- Use case: state router between Safety, Carry, and Spread.
 
-- Ranger Vault program: `vVoLTRjQmtFpiYoegx285Ze4gsLJ8ZxgFKVcuvmG1a8`
-- Ranger Drift adaptor: `EBN93eXs5fHGBABuajQqdsKRkCgaqtJa8vEFD6vKXiP`
+### Model C: RL Allocation Policy
 
-### Bot and Service Loops
+Target: choose allocations and risk budgets under constraints.
 
-- Signal loop: hourly data build and edge scoring
-- Rebalance loop: 4-hour target update and execution
-- Health loop: near-real-time risk checks and auto de-risking
-- Reporting loop: daily PnL attribution and KPI snapshot
+- Action space: per-market target weights and strategy-state choice.
+- Observation: edge model outputs, regime probabilities, risk metrics.
+- Reward: risk-adjusted PnL with penalties for turnover, drawdown, and health deterioration.
+- Candidate algorithms: SAC first, PPO as backup.
 
-### Suggested Modules
+Reward template:
 
-- `signals/funding_basis.ts`
-- `risk/health_guard.ts`
-- `execution/rebalance_engine.ts`
-- `ops/circuit_breaker.ts`
-- `reporting/kpi_pack.ts`
+`reward_t = pnl_t - a*loss_t - b*cost_t - c*drawdown_penalty_t - d*health_penalty_t - e*turnover_penalty_t`
 
-## Validation and Go-Live Gates
+## 4) Decision Layer
 
-### Backtest Gate
+### Hybrid Decision Stack
 
-- Net APY above target with full trading-cost model
-- Max drawdown within pre-set cap
-- Positive edge persistence across market regimes
+1. Hard risk checks pass.
+2. Regime model approves state.
+3. Edge model exceeds threshold with confidence.
+4. RL policy proposes allocations.
+5. Rule engine clips allocations to compliance limits.
 
-### Forward Test Gate
+### Entry and Exit Defaults
 
-- 2 to 3 weeks of paper or low-size live execution
-- No risk-rule violations
-- Slippage and turnover remain inside model tolerances
+- Entry threshold: projected net APY >= 12 percent.
+- Exit threshold: projected net APY <= 8 percent.
+- Funding adverse for two checks triggers partial or full exit.
+- Any hard risk breach forces full flatten.
 
-### Launch Gate
+## Training Pipeline
 
-- Runbook complete
-- Alerting live
-- Emergency flatten tested
+## Stage 0: Data Quality and Label Integrity
 
-## Performance Attribution Template
+- Validate timestamp continuity.
+- Validate missing-value policy.
+- Validate funding and price alignment.
+- Validate leakage prevention in labels.
 
-Daily report fields:
+## Stage 1: Supervised Pretraining
 
-- Total PnL and net APY
-- Funding income contribution
-- Basis convergence contribution
-- Lending yield contribution
-- Fees and slippage drag
-- Exposure by market and state
-- Max intraday drawdown and current health buffer
+- Train edge model on rolling windows.
+- Use walk-forward cross-validation, never random split.
+- Track calibration quality, not only RMSE.
+- Export confidence intervals for trade veto logic.
 
-## Submission Package Plan
+## Stage 2: Simulator and RL Training
 
-### Required Artifacts
+- Build event-driven simulator with realistic costs.
+- Include fees, slippage, borrow costs, funding payments, and health constraints.
+- Train SAC with 4-hour action cadence and 48-hour context window.
+- Train on multiple market periods: trend, chop, stress.
 
-- 3-minute demo video showing thesis, architecture, risk controls, and live traces
-- Strategy document with formulas, thresholds, and emergency logic
-- Code repository with reproducible scripts and config references
-- On-chain wallet or vault address from build window activity
-- CEX CSV and read-only API key only if cross-venue leg is used
+## Stage 3: Offline Policy Evaluation
 
-### Judge Narrative
+- Use fixed historical replay.
+- Compare against baselines:
+  - pure USDC lend baseline
+  - rule-based carry strategy
+  - supervised-only allocator
+- Evaluate APY, Sharpe, Sortino, max drawdown, turnover, liquidation distance.
 
-- Real edge: funding and basis carry, not fragile token emissions
-- Real risk discipline: deterministic rules, buffers, and hard circuit breakers
-- Real production path: adaptor-based deployment, monitoring, and audit-aware operations
+## Stage 4: Paper Trading and Shadow Mode
 
-## Implementation Timeline
+- Run 2 to 3 weeks with real-time data and no capital risk.
+- Validate decision latency, execution realism, and alert quality.
+- Gate live launch on zero critical risk incidents.
+
+## Training Improvements Roadmap
+
+### Improvement 1: Regime-Aware Curriculum
+
+- Start training on stable periods.
+- Add volatile and crash periods gradually.
+- Improve policy robustness before live run.
+
+### Improvement 2: Cost Model Hardening
+
+- Learn slippage model from simulated execution traces.
+- Stress with worse-than-observed cost scenarios.
+
+### Improvement 3: Ensemble Gating
+
+- Combine two edge models and require agreement for high-risk entries.
+- Lower false positives in weak-edge regimes.
+
+### Improvement 4: Uncertainty-Aware Sizing
+
+- Scale exposure by confidence and tail-risk estimates.
+- Keep exposure low when model uncertainty widens.
+
+### Improvement 5: Conservative Policy Distillation
+
+- Distill RL outputs into a simpler bounded policy for production reliability.
+- Keep deterministic behavior under ops pressure.
+
+## Bot Script Plan
+
+## Directory Layout
+
+```
+bot/
+  data/
+    download_drift_history.py
+    download_ranger_history.py
+    build_feature_store.py
+  train/
+    train_edge_model.py
+    train_regime_model.py
+    train_rl_policy.py
+    evaluate_policies.py
+  runtime/
+    signal_service.py
+    allocation_service.py
+    risk_guard.py
+    execution_router.py
+    reporter.py
+  ops/
+    healthcheck.py
+    alerting.py
+    runbook.md
+```
+
+## Script Responsibilities
+
+- `download_drift_history.py`: pulls historical funding, prices, risk, and borrow-lend data.
+- `build_feature_store.py`: creates model-ready feature tables and labels.
+- `train_edge_model.py`: supervised predictor for next-window net edge.
+- `train_regime_model.py`: regime classification for state routing.
+- `train_rl_policy.py`: allocation policy learning in simulator.
+- `evaluate_policies.py`: benchmark and robustness test report generation.
+- `signal_service.py`: live feature inference and predictions.
+- `allocation_service.py`: combine predictions and output target allocations.
+- `risk_guard.py`: enforce hard risk rules and circuit breakers.
+- `execution_router.py`: convert targets into Drift and Ranger actions.
+- `reporter.py`: daily attribution and judge-ready logs.
+
+## Runtime Schedule
+
+- Every hour: data refresh and signal update.
+- Every 4 hours: allocation decision and rebalance.
+- Continuous: health checks and emergency controls.
+- Daily: attribution report and model drift diagnostics.
+
+## Evaluation Matrix For Hackathon
+
+| Category | Pass Threshold |
+| --- | --- |
+| Net APY | >= 10 percent with cost model included |
+| Max drawdown | <= 12 percent |
+| Daily hard-stop breaches | zero tolerated in forward test |
+| Health hard-stop breaches | zero tolerated in forward test |
+| Turnover | within fee budget and no churn patterns |
+| Explainability | each trade tagged with model and rule reasons |
+
+## Compliance and Safety Layer
+
+- USDC-only accounting and reporting.
+- No disallowed strategy components.
+- Deterministic hard limits independent of ML outputs.
+- Fallback mode to Safety State on telemetry failure.
+- Audit-aware references to Ranger deployed programs and audit reports.
+
+## Data and Docs References
+
+### Competition and Ranger
+
+- https://ranger.finance/build-a-bear-hackathon
+- https://www.app.ranger.finance/earn
+- https://docs.ranger.finance/llms.txt
+- https://docs.ranger.finance/vault-owners/strategies/setup-guide
+- https://docs.ranger.finance/vault-owners/operations/bots-and-scripts
+- https://docs.ranger.finance/security/deployed-programs
+- https://docs.ranger.finance/security/audits
+
+### Drift Core
+
+- https://docs.drift.trade/protocol
+- https://docs.drift.trade/protocol/trading/perpetuals-trading/funding-rates
+- https://docs.drift.trade/protocol/trading/margin/account-health
+- https://docs.drift.trade/protocol/trading/liquidations
+- https://docs.drift.trade/protocol/borrow-lend
+
+### Optional CEX Verification
+
+- https://www.cobo.com/developers/v2/developer-tools/cobo-cli/api-documentation
+
+## Delivery Plan
 
 ### Week 1
 
-- Finalize parameters, market filters, and backtest harness
-- Stand up data and reporting stack
+- Data ingestion, feature store, and baseline supervised model.
+- Rule-based carry baseline bot with deterministic risk guard.
 
 ### Week 2
 
-- Integrate execution and risk engine with Drift and Ranger flows
-- Complete dry-runs and stress tests
+- Simulator completion and RL policy training.
+- Walk-forward evaluation and stress testing.
 
 ### Week 3
 
-- Run forward test and parameter freeze
-- Prepare demo, documentation, and verification pack
+- Shadow mode, parameter freeze, and failure-drill tests.
+- Finalize demo, documentation, and on-chain verification package.
 
-## Final Positioning
+## Final Submission Positioning
 
-Name this submission `Drift Adaptive Funding Carry Vault`.
+Project name: `Drift Adaptive Funding ML Vault`.
 
 One-line pitch:
 
-`A USDC Ranger vault that harvests Drift-native funding and basis carry only when post-cost edge is strong, while enforcing strict health and drawdown guardrails for production-safe compounding.`
+`A USDC Ranger vault manager bot that learns funding and basis edge from Drift data, allocates with risk-constrained RL, and enforces strict health and drawdown guardrails for production-safe compounding.`

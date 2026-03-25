@@ -1,0 +1,11 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+__pycache__/
+.pytest_cache/
+*.pyc
+ml/models/
+ml/data/cache/
+ml/data/raw/
