@@ -1,0 +1,78 @@
+# Drift Funding Rates
+
+- Source URL: https://docs.drift.trade/protocol/trading/perpetuals-trading/funding-rates
+- Retrieved At: 2026-03-25 11:01:15 UTC
+- Fetch Status: ok
+
+## Highlighted Requirements For This Project
+
+- Model funding contribution hourly and annualize carefully in APY calculations.
+- Set rebalance cadence around funding updates and expected spread persistence.
+- Apply funding caps and edge buffers in entry threshold logic.
+
+## Full Documentation Capture
+
+# Funding Rates
+
+Perpetuals futures have no expiry date, final settlement, or delivery. As such, funding rate payments are used as the incentive mechanism to bring the perpetual futures’ mark price in line with the oracle price.
+
+(For instance, a user with a long position in a market whose mark price is, on average, below the oracle price will receive a payoff proportional to their position size).
+
+| Field | Description |
+| --- | --- |
+| Funding Rate % Calc | `1/24 \* (market_twap - oracle_twap)/oracle_twap` |
+| TWAP Parameters | EMA with span = 1 hour |
+| Mark TWAP Calc | `(bid TWAP + ask TWAP) / 2` |
+| Frequency | End of Hour\* (9:00 AM, 10:00 AM, …) |
+
+Note: Funding rate hourly magnitudes are clamped according to the market’s Contract Tier (B or greater: 0.125%, C: 0.208%, lower than C: 0.4167%) and can be delayed at large divergences (see [Oracles](/protocol/trading/oracles)). Individual Market TWAP updates utilize the side of the book for trade executions, Bid and Ask TWAPs in the market are calculated and/or estimated on every trade.
+
+\*If no market trades and/or funding update calls occur within the first ~20 minutes of the hour, the next funding update will be delayed an additional hour.
+
+### Unrealised -> Realised Funding
+
+* Funding rates are updated *lazily* every hour.
+* Any time a user opens or closes a position, the exchange tries to update the funding rate.
+* The funding rate will still be updated if enough time has passed and no position has been opened or closed.
+* The update will reflect the premium or discount between the AMM’s mark price and the oracle’s price TWAP over the previous hour.
+* The cumulative funding rate is checked against user positions in case the off-chain funding rate bot does not trigger on the hour. This will show up as “Unrealised P&L” until your next user action within the market (such as a trade, deposit, withdraw etc.), see also [P&L](/protocol/trading/profit-loss).
+* Funding payments may not pay out for markets that trade infrequently.
+
+### Capped Symmetric Funding
+
+Drift Protocol aims to provide a symmetric funding rate to both sides of the market. When there is a long-short imbalance within the AMM, the protocol’s market-specific Rebate Pool can be used to pay (or receive) the cost delta between the longs and the shorts.
+
+If the pool is empty or does not have enough to provide for funding (2/3 of the Rebate Pool balance available at each funding interval), then the receipts for funding will be capped to the available amount.
+
+See [Rebates](/protocol/market-makers/maker-fee-rebate) for funding pool sizes where the funding paid from the Rebate Pool will be capped. This ensures that the risk is spread in the system and the Insurance Fund isn’t drained by funding rates.
+
+Over the hour, the amount available in the Rebate Pool will increase from fees as trades occur, so any existing predicted capped rate should move closer to being balanced.
+
+**Example:**
+
+For SOL-PERP you can check the recent history to get a better idea of what shorts will receive.
+
+![](/assets/funding-rates-1.png)
+
+### Oracle Resilience
+
+Drift’s on-chain calculation of a market’s oracle TWAP is updated only on trades which incorporates the oracle’s confidence interval and a few interpolations to provide the most accurate and resilient value.
+
+Read more about protective checks in [Oracles](/protocol/trading/oracles).
+
+### APR calculation
+
+Funding rates can be showcased in annual terms for easier comparison.
+
+* **APR (annual percentage rate)** is calculated
+
+  ```
+  rate x 24 x 365.25
+  ```
+* **APY** is calculated
+
+  ```
+  (1 + rate) ^ (24 x 365.25) - 1
+  ```
+
+One can approximately track **APY** by allocating funding receipts back into the position (excluding fees/rebates).
