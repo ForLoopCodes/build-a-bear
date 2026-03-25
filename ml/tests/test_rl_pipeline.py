@@ -45,8 +45,12 @@ class TestRlPipeline(unittest.TestCase):
         result = trainer.train(env, episodes=3)
         self.assertIn("best_action", result)
         self.assertIn("best_reward", result)
+        self.assertIn("reward_mean", result)
         self.assertGreaterEqual(result["best_action"], 0)
         self.assertLessEqual(result["best_action"], 1)
+
+        grid_result = trainer.train_grid_search(env, episodes=2)
+        self.assertIn("best_action", grid_result)
 
 
 if __name__ == "__main__":

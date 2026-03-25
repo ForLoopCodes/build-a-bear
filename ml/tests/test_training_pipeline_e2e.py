@@ -31,8 +31,10 @@ class TestTrainingPipelineE2E(unittest.TestCase):
     def test_pipeline_outputs_artifacts(self) -> None:
         artifacts = run_training_pipeline(rows())
         self.assertIn("rmse", artifacts.edge_model_metrics)
+        self.assertIn("risk_off_rate", artifacts.regime_metrics)
         self.assertIn("best_action", artifacts.rl_metrics)
         self.assertEqual(artifacts.registry_record["model_name"], "edge_model")
+        self.assertIn("edge_model", artifacts.model_paths)
 
 
 if __name__ == "__main__":

@@ -8,9 +8,9 @@ from typing import Dict, List, Tuple
 class TradingEnvironment:
     features: List[Dict[str, float | str]]
     labels: List[Dict[str, float | str]]
-    fee_penalty: float = 0.15
-    drawdown_penalty: float = 0.2
-    turnover_penalty: float = 0.05
+    fee_penalty: float = 0.02
+    drawdown_penalty: float = 0.08
+    turnover_penalty: float = 0.01
 
     def __post_init__(self) -> None:
         if len(self.features) != len(self.labels):
@@ -25,12 +25,14 @@ class TradingEnvironment:
 
     def step(self, action: float) -> Tuple[Dict[str, float | str], float, bool, Dict[str, float]]:
         action = max(0.0, min(1.0, action))
+        feature = self.features[self.index]
         label = self.labels[self.index]
         realized = float(label["realized_next_4h_net_apy"])
+        safe_yield = max(0.0, float(feature.get("carry_edge_apy", 0.0)) * 0.25)
 
-        pnl_component = action * realized
+        pnl_component = safe_yield + action * realized
         fee_component = self.fee_penalty * abs(action - self.last_action)
-        drawdown_component = self.drawdown_penalty * max(0.0, -realized)
+        drawdown_component = self.drawdown_penalty * action * max(0.0, -realized)
         turnover_component = self.turnover_penalty * abs(action - self.last_action)
 
         reward = pnl_component - fee_component - drawdown_component - turnover_component

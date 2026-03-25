@@ -1,0 +1,41 @@
+{
+  "data": {
+    "rows": 131436,
+    "markets": [
+      "BTC-PERP",
+      "ETH-PERP",
+      "SOL-PERP"
+    ],
+    "years": 5,
+    "interval_hours": 1,
+    "data_source": "binance",
+    "cache_path": "ml/data/cache/binance_history_5y.jsonl"
+  },
+  "edge_metrics": {
+    "mse": 0.10900112543522257,
+    "rmse": 0.3301531848024831,
+    "num_predictions": 131360.0
+  },
+  "regime_metrics": {
+    "risk_off_rate": 0.4029975654290931,
+    "stable_rate": 0.5970024345709068
+  },
+  "rl_metrics": {
+    "best_action": 0.0,
+    "best_reward": 286.4979353735483,
+    "policy_action": 0.55,
+    "reward_mean": -4.974764089273061,
+    "reward_std": 9.243739413969806
+  },
+  "registry_record": {
+    "model_name": "edge_model",
+    "version": "v1",
+    "registered_at": "2026-03-25T18:46:01.321055+00:00",
+    "rmse": 0.3301531848024831,
+    "best_reward": 286.4979353735483
+  },
+  "model_paths": {
+    "edge_model": "ml\\output\\models\\edge_model.json",
+    "regime_model": "ml\\output\\models\\regime_model.json"
+  }
+}

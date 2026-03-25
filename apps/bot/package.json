@@ -9,6 +9,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "jest --config jest.config.cjs --runInBand"
+    "test": "jest --config jest.config.cjs --runInBand",
+    "devnet:paper": "ts-node -r tsconfig-paths/register scripts/run-devnet-paper-trading.ts"
   }
 }

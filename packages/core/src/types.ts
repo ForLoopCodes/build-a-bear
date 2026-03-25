@@ -27,6 +27,7 @@ export const marketSnapshotSchema = z.object({
   borrowApy: z.number(),
   utilization: z.number().min(0).max(1),
   estimatedExecutionCostBps: z.number().nonnegative(),
+  referencePrice: z.number().positive().optional(),
 });
 
 export const riskSnapshotSchema = z.object({

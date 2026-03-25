@@ -1,5 +1,6 @@
 import { corePackageName } from "@build-a-bear/core";
 import { DriftDataSource } from "./adapters";
+export * from "./live";
 
 export function botBanner(): string {
   return `build-a-bear bot powered by ${corePackageName}`;

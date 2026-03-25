@@ -1,0 +1,24 @@
+{
+  "edge_predictions": [
+    {
+      "market": "BTC-PERP",
+      "expected_net_apy": 0.08761376022597132,
+      "confidence": 0.25670864056571063
+    },
+    {
+      "market": "ETH-PERP",
+      "expected_net_apy": 0.0952072753888683,
+      "confidence": 0.2393753072323772
+    },
+    {
+      "market": "SOL-PERP",
+      "expected_net_apy": 0.11460788227851888,
+      "confidence": 0.2047086405657106
+    }
+  ],
+  "regime_prediction": {
+    "stable_carry_probability": 0.10000000000000002,
+    "unstable_carry_probability": 0.20000000000000004,
+    "risk_off_probability": 0.6999999999999998
+  }
+}

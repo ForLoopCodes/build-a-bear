@@ -22,6 +22,7 @@
     "@types/ws": "^8.5.13",
     "jest": "^29.7.0",
     "ts-jest": "^29.4.6",
+    "tsconfig-paths": "^4.2.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
   },
@@ -32,6 +33,13 @@
     "test:ts": "npm run test --workspace @build-a-bear/core --workspace @build-a-bear/bot",
     "test:all": "npm run test:ts && npm run ml:test",
     "ml:test": "python -m unittest discover -s ml/tests -p \"test_*.py\"",
-    "ml:train": "python -m ml_pipeline.training.train_all"
+    "ml:train": "python -m ml_pipeline.training.train_all",
+    "ml:production": "python scripts/run_hackathon_pipeline.py",
+    "bot:devnet:paper": "npm run devnet:paper --workspace @build-a-bear/bot",
+    "api:dev": "npm run dev --workspace @build-a-bear/api",
+    "web:dev": "npm run dev --workspace @build-a-bear/web",
+    "web:build": "npm run build --workspace @build-a-bear/web",
+    "app:build": "npm run build --workspace @build-a-bear/api && npm run build --workspace @build-a-bear/web",
+    "app:start": "npm run dev --workspace @build-a-bear/api"
   }
 }

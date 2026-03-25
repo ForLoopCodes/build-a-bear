@@ -36,6 +36,11 @@ class TestSupervisedModels(unittest.TestCase):
         self.assertIn("confidence", prediction)
         self.assertGreater(prediction["confidence"], 0)
 
+        payload = model.to_dict()
+        restored = EdgeModel.from_dict(payload)
+        restored_prediction = restored.predict(feature(0.14))
+        self.assertIn("expected_net_apy", restored_prediction)
+
     def test_regime_model_risk_off(self) -> None:
         model = RegimeModel()
         output = model.predict(feature(0.1, vol24=0.09, divergence=10))
@@ -43,8 +48,14 @@ class TestSupervisedModels(unittest.TestCase):
 
     def test_regime_model_stable(self) -> None:
         model = RegimeModel()
+        model.fit([feature(0.1), feature(0.12, vol24=0.06), feature(0.08, vol24=0.03)], [])
         output = model.predict(feature(0.1, vol24=0.03, divergence=4))
         self.assertGreater(output["stable_carry_probability"], output["risk_off_probability"])
+
+        payload = model.to_dict()
+        restored = RegimeModel.from_dict(payload)
+        output_restored = restored.predict(feature(0.1, vol24=0.03, divergence=4))
+        self.assertIn("stable_carry_probability", output_restored)
 
 
 if __name__ == "__main__":
