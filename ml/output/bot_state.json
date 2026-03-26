@@ -1,0 +1,27 @@
+{
+  "isAutomationEnabled": true,
+  "lastCycleAt": null,
+  "pnlSol": 0,
+  "pnlUsd": 0,
+  "totalDepositsSol": 0.09909912,
+  "totalClaimsSol": 0,
+  "claimableByWallet": {
+    "HUa7dFjShvvaLEemfX7stGBc22Zm6rzaPCjZumcidUZ": 0.09909912
+  },
+  "userDepositAddressByWallet": {
+    "HUa7dFjShvvaLEemfX7stGBc22Zm6rzaPCjZumcidUZ": "DohcKh8tFrnNub2SonYdebLRQgeE4UZHihMPLSHYsXbp",
+    "EyN8tmwkTEneAKCxsCZS7SpZnYNxHFMnMGd9HnkxZRHh": "4WeVLeTsCDHhEcC4UB2K7JMWUFhzdfyE8aknzaUi34x5"
+  },
+  "depositLedger": [
+    {
+      "wallet": "HUa7dFjShvvaLEemfX7stGBc22Zm6rzaPCjZumcidUZ",
+      "signature": "3jzicaYKFF2HHrYSAAc9DtC93RChXJupRS9c1ryh6spXqNxR9HtJ8h18iQZc34rUjfaPJgqjTeSmVd9opzGNuouq",
+      "depositAddress": "DohcKh8tFrnNub2SonYdebLRQgeE4UZHihMPLSHYsXbp",
+      "sweepSignature": "32uMbTBjQBVUK5RV1S8sTnuuRFGpMeKZcytcbnhBPBJji8GXrh4K6YJ3Qmu5ZLZJ59wV9SPsYbgwmH4XATkvapTk",
+      "sweptAmountSol": 0.09909912,
+      "amountSol": 0.09909912,
+      "timestamp": "2026-03-26T12:41:13.168Z"
+    }
+  ],
+  "claimLedger": []
+}

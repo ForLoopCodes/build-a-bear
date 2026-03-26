@@ -9,6 +9,7 @@ import {
 } from "@solana/web3.js";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import path from "path";
+import { resolveWorkspacePath } from "./workspace_paths";
 
 type SmartWalletStore = Record<string, number[]>;
 
@@ -48,11 +49,8 @@ export class WalletService {
 
   constructor(authorityKeypairPath?: string, rpcUrl?: string, smartWalletStorePath?: string) {
     this.connection = new Connection(rpcUrl ?? clusterApiUrl("devnet"), "confirmed");
-    this.botAuthority = ensureAuthorityKeypair(
-      authorityKeypairPath ?? path.join(process.cwd(), "ml", "output", "bot_authority_keypair.json"),
-    );
-    this.smartWalletStorePath = smartWalletStorePath ??
-      path.join(process.cwd(), "ml", "output", "user_smart_wallets.json");
+    this.botAuthority = ensureAuthorityKeypair(resolveWorkspacePath(authorityKeypairPath ?? "ml/output/bot_authority_keypair.json"));
+    this.smartWalletStorePath = resolveWorkspacePath(smartWalletStorePath ?? "ml/output/user_smart_wallets.json");
     this.smartWalletStore = loadSmartWalletStore(this.smartWalletStorePath);
   }
 
@@ -91,14 +89,31 @@ export class WalletService {
     return lamports / LAMPORTS_PER_SOL;
   }
 
+  private async estimateTransferFeeLamports(fromPubkey: PublicKey): Promise<number> {
+    const { blockhash } = await this.connection.getLatestBlockhash("confirmed");
+    const probe = new Transaction({
+      feePayer: fromPubkey,
+      recentBlockhash: blockhash,
+    }).add(
+      SystemProgram.transfer({
+        fromPubkey,
+        toPubkey: this.botAuthority.publicKey,
+        lamports: 1,
+      }),
+    );
+    return (await this.connection.getFeeForMessage(probe.compileMessage(), "confirmed")).value ?? 5_000;
+  }
+
   async sweepUserDeposit(wallet: string): Promise<{ signature: string | null; amountSol: number }> {
     const userWallet = this.getOrCreateUserSmartWallet(wallet);
     const balanceLamports = await this.connection.getBalance(userWallet.publicKey, "confirmed");
-    if (balanceLamports <= 10_000) {
+    const rentReserveLamports = await this.connection.getMinimumBalanceForRentExemption(0, "confirmed");
+    const feeLamports = await this.estimateTransferFeeLamports(userWallet.publicKey);
+    const transferable = balanceLamports - rentReserveLamports - feeLamports - 5_000;
+    if (transferable <= 0) {
       return { signature: null, amountSol: 0 };
     }
 
-    const transferable = balanceLamports - 10_000;
     const transaction = new Transaction().add(
       SystemProgram.transfer({
         fromPubkey: userWallet.publicKey,

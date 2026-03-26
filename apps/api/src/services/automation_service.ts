@@ -1,17 +1,17 @@
 import { execSync } from "child_process";
-import path from "path";
 import { readFileSync } from "fs";
 import { RunCycleResult } from "../types";
+import { resolveWorkspacePath, workspaceRoot } from "./workspace_paths";
 
 export function runPaperCycleAndReadResult(triggerRunner: boolean): RunCycleResult {
   if (triggerRunner) {
     execSync("npm run bot:devnet:paper", {
-      cwd: process.cwd(),
+      cwd: workspaceRoot,
       stdio: "pipe",
     });
   }
 
-  const filePath = path.join(process.cwd(), "ml", "output", "devnet_paper_run.json");
+  const filePath = resolveWorkspacePath("ml/output/devnet_paper_run.json");
   const payload = JSON.parse(readFileSync(filePath, "utf-8"));
 
   return {
@@ -28,11 +28,11 @@ export function runTrainingAndReadSummary(): {
   rlBestReward: number;
 } {
   execSync("npm run ml:production", {
-    cwd: process.cwd(),
+    cwd: workspaceRoot,
     stdio: "pipe",
   });
 
-  const summaryPath = path.join(process.cwd(), "ml", "output", "training_summary.json");
+  const summaryPath = resolveWorkspacePath("ml/output/training_summary.json");
   const summary = JSON.parse(readFileSync(summaryPath, "utf-8"));
   return {
     summaryPath,

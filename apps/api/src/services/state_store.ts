@@ -1,8 +1,9 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import path from "path";
 import { BotState } from "../types";
+import { resolveWorkspacePath } from "./workspace_paths";
 
-const STORAGE_PATH = path.join(process.cwd(), "ml", "output", "bot_state.json");
+const STORAGE_PATH = resolveWorkspacePath("ml/output/bot_state.json");
 
 const EMPTY_STATE: BotState = {
   isAutomationEnabled: false,

@@ -1,19 +1,27 @@
 import "dotenv/config";
 import cors from "cors";
 import express from "express";
-import path from "path";
 import { loadState, saveState } from "./services/state_store";
 import { WalletService } from "./services/wallet_service";
 import { runPaperCycleAndReadResult, runTrainingAndReadSummary } from "./services/automation_service";
+import { resolveWorkspacePath } from "./services/workspace_paths";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+const safe = (
+  handler: (request: express.Request, response: express.Response) => Promise<void> | void,
+): express.RequestHandler => {
+  return (request, response, next) => {
+    Promise.resolve(handler(request, response)).catch(next);
+  };
+};
+
 const authorityKeypairPath = process.env.BOT_AUTHORITY_KEYPAIR_PATH ?? process.env.BOT_KEYPAIR_PATH;
 const walletService = new WalletService(authorityKeypairPath, process.env.RPC_URL);
 
-app.get("/api/status", async (_, response) => {
+app.get("/api/status", safe(async (_, response) => {
   const state = loadState();
   const botBalanceSol = await walletService.getBotBalanceSol();
   response.json({
@@ -21,7 +29,7 @@ app.get("/api/status", async (_, response) => {
     botBalanceSol,
     state,
   });
-});
+}));
 
 app.get("/api/deposits/address/:wallet", (request, response) => {
   const { wallet } = request.params;
@@ -38,7 +46,7 @@ app.get("/api/deposits/address/:wallet", (request, response) => {
   response.json({ wallet, depositAddress });
 });
 
-app.post("/api/deposits/record", async (request, response) => {
+app.post("/api/deposits/record", safe(async (request, response) => {
   const { wallet, signature, amountSol } = request.body as {
     wallet: string;
     signature: string;
@@ -70,7 +78,7 @@ app.post("/api/deposits/record", async (request, response) => {
   state.userDepositAddressByWallet[wallet] = depositAddress;
   saveState(state);
   response.json({ ok: true, state });
-});
+}));
 
 app.post("/api/automation/toggle", (request, response) => {
   const { enabled } = request.body as { enabled: boolean };
@@ -106,7 +114,7 @@ app.post("/api/training/run", (_, response) => {
   response.json({ ok: true, summary });
 });
 
-app.post("/api/claims/claim", async (request, response) => {
+app.post("/api/claims/claim", safe(async (request, response) => {
   const { wallet } = request.body as { wallet: string };
   if (!wallet) {
     response.status(400).json({ error: "wallet is required" });
@@ -132,9 +140,14 @@ app.post("/api/claims/claim", async (request, response) => {
   saveState(state);
 
   response.json({ ok: true, signature, amountSol: claimable, state });
+}));
+
+app.use((error: unknown, _: express.Request, response: express.Response, __: express.NextFunction) => {
+  const message = error instanceof Error ? error.message : String(error);
+  response.status(500).json({ error: message });
 });
 
-app.use(express.static(path.join(process.cwd(), "apps", "web", "dist")));
+app.use(express.static(resolveWorkspacePath("apps/web/dist")));
 
 const port = Number(process.env.API_PORT ?? 8787);
 app.listen(port, () => {

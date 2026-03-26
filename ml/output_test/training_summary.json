@@ -30,7 +30,7 @@
   "registry_record": {
     "model_name": "edge_model",
     "version": "v1",
-    "registered_at": "2026-03-25T19:18:56.885011+00:00",
+    "registered_at": "2026-03-25T19:41:57.291173+00:00",
     "rmse": 0.13178970399739043,
     "best_reward": 12.327920058007434
   },
